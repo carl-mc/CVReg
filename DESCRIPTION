@@ -1,0 +1,19 @@
+Package: CVReg
+Title: CoVoting Regression Model and Methods
+Version: 0.0.0.9000
+Authors@R: 
+    person("Carl", "Müller-Crepon", , "c.a.muller-crepon@lse.ac.uk", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-8536-7861"))
+Description: Methods to implement the Covoting Regression (CVR) model developed by Müller-Crepon & Bormann (2025). Please cite Müller-Crepon, C., & Bormann, N.-C. (2025). Coethnics Covote in Africa: Studying Electoral Cleavages with a Covoting Regression Model. *American Political Science Review*, in Press. 
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+LazyData: true
+Depends: data.table,
+    igraph,
+    glmnet,
+    foreach,
+    parallel,
+    doParallel

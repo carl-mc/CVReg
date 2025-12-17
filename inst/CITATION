@@ -1,0 +1,11 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "Coethnics Covote in Africa: Studying Electoral Cleavages with a Covoting Regression Model",
+  author= c(person(c("Carl"), "Müller-Crepon"), person(c("Nils-Christian"), "Bormann")),
+  year = 2025,
+  journal  = "American Political Science Review",
+  volume   = "",
+  number   = "",
+  pages    = "",
+  doi      = ""
+)
