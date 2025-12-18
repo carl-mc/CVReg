@@ -2,13 +2,22 @@
 % Please edit documentation in R/dcr_par.R
 \name{create_dyadid}
 \alias{create_dyadid}
-\title{Helper function to create dyad IDs}
+\title{Dyad ID creation}
 \usage{
 create_dyadid(data, dyad_mem1, dyad_mem2, directed = F)
 }
 \arguments{
-\item{directed}{}
+\item{data}{Data}
+
+\item{dyad_mem1}{Variable name of a.ID}
+
+\item{dyad_mem2}{Variable name of b.ID}
+
+\item{directed}{Directed dyads? Logical.}
+}
+\value{
+A vector of integer dyad IDs of length \code{nrow(data)}
 }
 \description{
-Helper function to create dyad IDs
+Internal function to create dyad IDs
 }

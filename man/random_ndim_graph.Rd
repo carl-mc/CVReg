@@ -4,13 +4,22 @@
 \alias{random_ndim_graph}
 \title{Planar graph via Delauney tesselation of Ndim random variables}
 \usage{
-random_ndim_graph(N, Ndim)
+random_ndim_graph(N, Ndim, return_edgemat = FALSE)
 }
 \arguments{
 \item{N}{Number of vertices}
 
 \item{Ndim}{Number of dimensions (random variables)}
+
+\item{return_edgemat}{Return edge matrix rather than an igraph object.}
+}
+\value{
+Either an edge matrix or an igraph object
 }
 \description{
 Planar graph via Delauney tesselation of Ndim random variables
+}
+\examples{
+g <- random_ndim_graph(10, Ndim = 2)
+plot(g)
 }

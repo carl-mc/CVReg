@@ -2,7 +2,7 @@
 % Please edit documentation in R/dcr_par.R
 \name{dcr_par}
 \alias{dcr_par}
-\title{This function computes DCR variance estimates and standard errors
+\title{Parallel estimation of DCR variance and standard errors
 (DCRSEs) for model parameters.}
 \usage{
 dcr_par(
@@ -19,11 +19,15 @@ dcr_par(
 \arguments{
 \item{model}{A model object.}
 
-\item{dyad_mem1}{A string for the name of first dyad member identifier variable.}
+\item{dyad_mem1}{A string for the name of first dyad member or cluster identifier variable.}
 
-\item{dyad_mem2}{A string for the name of second dyad member identifier variable.}
+\item{dyad_mem2}{A string for the name of second dyad member or cluster identifier variable.}
 
 \item{data}{A \code{data.frame} object containing dyadic data.}
+
+\item{ncore}{Number of CPUs. No parallel processing if \code{<1}}
+
+\item{type}{If \code{"sandwich"} uses clustering via \link[sandwich]{vcovCL}, otherwise \link[multiwayvcov]{cluster.vcov}}
 
 \item{posdef}{A logical value indicating whether or not DCR variance-covariance matrix is forced to be positive semi-definite.}
 
@@ -33,6 +37,5 @@ dcr_par(
 A list containing DCRSEs and the DCR variance-covariance matrix for model parameters, as well as the number of unique dyad members in the analytic sample.
 }
 \description{
-This function computes DCR variance estimates and standard errors
-(DCRSEs) for model parameters.
+Implements a parallelized version of Samii (2015).
 }

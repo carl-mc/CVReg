@@ -5,11 +5,14 @@
 
 #' Fast Export function for parallel processing
 #'
-#' @param cl
-#' @param varlist
-#' @param envir
+#' Internal helper function
+#'
+#' @param cl CPU cluster object
+#' @param varlist Character vector of objects to export
+#' @param envir Environment to export objects from
+#' @import foreach
 clusterExport_fast <- function (cl, varlist, envir = .GlobalEnv){
-    require(foreach)
+
     registerDoParallel(cl)
     tmp.file <- tempfile()
     save(list = varlist, file = tmp.file, envir = envir)
@@ -27,41 +30,50 @@ clusterExport_fast <- function (cl, varlist, envir = .GlobalEnv){
 }
 
 
-#' Helper function to create dyad IDs
+#' Dyad ID creation
 #'
-#' @param data
-#' @param dyad_mem1
-#' @param dyad_mem2
-#' @param directed
+#' Internal function to create dyad IDs
+#' @param data Data
+#' @param dyad_mem1 Variable name of a.ID
+#' @param dyad_mem2 Variable name of b.ID
+#' @param directed Directed dyads? Logical.
+#' @import data.table
 #'
-#' @returns
-#'
-#' @examples
+#' @returns A vector of integer dyad IDs of length \code{nrow(data)}
 create_dyadid <- function (data, dyad_mem1, dyad_mem2, directed = F){
     dvars <- c(dyad_mem1, dyad_mem2)
     sorteddyads <- as.matrix(data[, ..dvars])
-    if (directed != T) {
+    if (!directed) {
         sorteddyads[sorteddyads[,1] > sorteddyads[,2], c(1,2)] <-
             sorteddyads[sorteddyads[,1] > sorteddyads[,2], c(2,1)]
     }
     return(as.integer(as.factor(paste0(sorteddyads[,1], ".", sorteddyads[,2]))))
 }
 
-#' This function computes DCR variance estimates and standard errors
+#' Parallel estimation of DCR variance and standard errors
 #' (DCRSEs) for model parameters.
 #'
+#' Implements a parallelized version of Samii (2015).
+#'
 #' @param model A model object.
-#' @param dyad_mem1 A string for the name of first dyad member identifier variable.
-#' @param dyad_mem2 A string for the name of second dyad member identifier variable.
+#' @param dyad_mem1 A string for the name of first dyad member or cluster identifier variable.
+#' @param dyad_mem2 A string for the name of second dyad member or cluster identifier variable.
 #' @param data A `data.frame` object containing dyadic data.
 #' @param posdef A logical value indicating whether or not DCR variance-covariance matrix is forced to be positive semi-definite.
-#' @param ncore
-#' @param type
+#' @param ncore Number of CPUs. No parallel processing if \code{<1}
+#' @param type If \code{"sandwich"} uses clustering via \link[sandwich]{vcovCL}, otherwise \link[multiwayvcov]{cluster.vcov}
 #' @param dofcorr A logical value indicating whether or not to apply a small sample correction to the final DCRSE estimates. This correction is equivalent to multiplying DCRSEs by sqrt(N/(N-1)), where N is the number of unique dyad members in the analytic sample. Correspondingly, when computing p-values, the test statistic should be compared to a t-distribution with DOF = N - 1.
 #'
 #' @return A list containing DCRSEs and the DCR variance-covariance matrix for model parameters, as well as the number of unique dyad members in the analytic sample.
 #' @export
+#' @import foreach
+#' @import parallel
+#' @import doParallel
+#' @import multiwayvcov
+#' @import sandwich
+#' @import data.table
 dcr_par <- function(model, dyad_mem1, dyad_mem2, data, ncore = 1, type = "sandwich", posdef = FALSE, dofcorr = FALSE) {
+
 
     # Make Dyad-IDs
     data[, dcr_dyad_id := create_dyadid(data, dyad_mem1, dyad_mem2, directed = F)]
@@ -75,8 +87,7 @@ dcr_par <- function(model, dyad_mem1, dyad_mem2, data, ncore = 1, type = "sandwi
 
     # Cluster
     if(ncore > 1){
-        require(foreach)
-        cl <- parallel::makeCluster(getOption("cl.cores", ncore))
+        cl <- makeCluster(getOption("cl.cores", ncore))
         registerDoParallel(cl)
         exp.vec <- c("unique.dyad.mem", "dyad.by.obs", "gp.tag", "model", "dyad_mem1", "dyad_mem2", "type")
         clusterExport_fast(cl, varlist = exp.vec, envir = environment())

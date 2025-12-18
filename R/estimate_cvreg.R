@@ -6,7 +6,7 @@
 
 #' Estimate Covoting Regression Model
 #'
-#' @param fml Regression formula, following the notation used by \link[fixest]
+#' @param fml Regression formula, following the notation used by \code{fixest}
 #' @param data Dataset, either a data.table or data.frame.
 #' @param fixef Character vector with fixed effects.
 #' @param cluster Character vector of clusters to cluster standard errors on.
@@ -30,11 +30,42 @@
 #' @param ncore Number of threads to use for DCR standard error computation. Defaults to 1.
 #' @param ... Additional arguments to pass to \link[fixest]{feols} and  \link[fixest]{feglm}
 #'
-#' @returns
+#' @returns A \code{fixest} model object with some additional entries:
+#'  \itemize{
+#'      \item{\code{"Y_mean"}:} Average of outcome variable
+#'      \item{\code{"N_nodes"}:} Number of unique nodes. Only returned if identifiers "a.ID", "b.ID" in the data.
+#'      \item{\code{"sum.ls"}:} Results from computing conditional covoting and shared group membership quantities, if specified.
+#'      \item{\code{"dcr"}:} Cluster-robust standard errors and covariance matrix for network data, if specified.
+#' }
 #' @export
 #'
+#' @importFrom glmnet cv.glmnet
+#' @import fixest
+#' @import data.table
+#' @importFrom stats as.formula
+#' @importFrom stats coef
+#' @importFrom stats na.omit
+#'
 #' @examples
-estimate_cvr <- function(fml,
+#' # Load some data
+#' data(synthvote)
+#'
+#' # Transform to pairs
+#' pair.dt <- data_to_pairs(df = synthvote, by.var = c("unit"), structure = "full")
+#'
+#' # Process pair level data to create pairwise similarity/difference measures
+#' pair.dt <- process_pairs(df = pair.dt,
+#'                          vars =  c("prtvt.eq", "group.eq", "income.sim"))
+#'
+#' # Estimate model
+#' m <- estimate_cvreg(fml = prtvt.eq ~ group.eq + income.sim, fixef = c("unit"),
+#'                     cluster = c("a.ID", "b.ID"),
+#'                     data = pair.dt, cvr.det.var = "group.eq")
+#'
+#' summary(m)
+#' unlist(m$sum.ls[c(1,2)])
+#' do.call(cbind, m$sum.ls[-c(1,2)])
+estimate_cvreg <- function(fml,
                          data, fixef, cluster, weights = NULL,
                          cvr.det.var = NULL,
                          main.int.var = NULL, int.vars = c(),
@@ -42,8 +73,6 @@ estimate_cvr <- function(fml,
                          max.int.vars = 100,
                          lean = TRUE,
                          model = "ols", dcr = FALSE, ncore = 1, ...){
-    require(data.table)
-    require(fixest)
 
     ## Check Data format
     if(!"data.table" %in% class(data)){
@@ -55,7 +84,7 @@ estimate_cvr <- function(fml,
         if(all(paste0(c("a", "b"),".", rep(cluster, each = 2)) %in% colnames(data))){
             cluster <- paste0(c("a", "b"),".", rep(cluster, each = 2))
         }
-        data <- na.omit(data, cols = cluster)
+        na.omit(data, cols = cluster)
     }
 
     ## Fixed effects vars
@@ -63,12 +92,12 @@ estimate_cvr <- function(fml,
         if(all(paste0(c("a", "b"),".", rep(fixef, each = 2)) %in% colnames(data))){
             fixef <- paste0(c("a", "b"),".", rep(fixef, each = 2))
         }
-        data <- na.omit(data, cols = fixef)
+        na.omit(data, cols = fixef)
     }
 
     # Weights
     if(!is.null(weights)){
-        data <- na.omit(data, cols = weiqhts)
+        na.omit(data, cols = weiqhts)
     } else {
         weight.vec <- rep(1, nrow(data))
     }
@@ -160,22 +189,26 @@ estimate_cvr <- function(fml,
 }
 
 
-#' Title
+#' Post-processing function for estimate_cvreg
 #'
-#' @param df
-#' @param m
-#' @param lean
-#' @param weights
-#' @param fe
-#' @param cluster
-#' @param cvr.det.var
-#' @param dcr
-#' @param weight.vec
-#' @param ncore
+#' Helper function used to process the internal results of \code{estimate_cvreg()}.
 #'
-#' @returns
+#' @param df The data used to fit model \code{m}
+#' @param m Model as returned by \code{fixest} estimator
+#' @param lean Logical flag to strip the model of all large objects.
+#' @param weights Weight variable name
+#' @param fe Names of fixed effects
+#' @param cluster Names of cluster variables used for standard error clustering
+#' @param cvr.det.var Name of main cleavage measure to estimate within and between group covoting
+#'     and shared group membership among covoters and non-covoters for. Only works for binary measures (i.e., variable.eq)
+#' @param dcr Logical flag to compute dyadic clustered standard errors (Samii, 2015)
+#' @param weight.vec Vector of weights
+#' @param ncore Number of CPUs used for DCR standard error clustering.
 #'
-#' @examples
+#' @importFrom msm deltamethod
+#' @import data.table
+#'
+#' @returns A modified model object based on \code{m}.
 post_process_cvr <- function(df, m, lean, weights, fe, cluster, cvr.det.var, dcr, weight.vec = NULL, ncore = 1){
 
     # Record numbers
@@ -184,8 +217,11 @@ post_process_cvr <- function(df, m, lean, weights, fe, cluster, cvr.det.var, dcr
     m$Y_mean <- mean(m$fitted.values)
 
     ## Respondents
-    ind_vec <- unlist(df[, c("a.ID", "b.ID")])
-    m$N_individuals <- length(unique(ind_vec))
+    if(all(c("a.ID", "b.ID") %in% colnames(df))){
+        ind_vec <- unlist(df[, c("a.ID", "b.ID")])
+        m$N_nodes <- length(unique(ind_vec))
+    }
+
 
 
     # Standard errors
@@ -332,17 +368,23 @@ post_process_cvr <- function(df, m, lean, weights, fe, cluster, cvr.det.var, dcr
 
 #' Make interactions between cleavages for fully interacted models
 #'
-#' @param df
-#' @param main.var
-#' @param int.vars
+#' @param df Pairwise dataset
+#' @param main.var Main variable of interest
+#' @param int.vars Control variables for which to build interactions.
+#'    Can include either a CVR suffix or not. Must be in \code{df} for a and b.
 #'
-#' @returns
-#' @export
+#' @import data.table
+#' @importFrom stats as.formula
+#' @importFrom stats model.matrix
 #'
-#' @examples
+#' @returns An augmented dataset
 cvr_cleav_int <- function(df,
                            main.var,
                            int.vars){
+    # Check if data.table
+    if(!"data.table" %in% class(df)){
+        df <- data.table(df)
+    }
 
     # Force factors
     for(v in c(main.var, int.vars[int.vars != main.var])){

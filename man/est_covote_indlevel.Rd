@@ -2,13 +2,37 @@
 % Please edit documentation in R/estimate_indlevel.R
 \name{est_covote_indlevel}
 \alias{est_covote_indlevel}
-\title{Title}
+\title{Estimate covoting coefficients for categorical cleavage variables from multinomial model}
 \usage{
-est_covote_indlevel(data, out, cov, method = c("glm", "ols"))
+est_covote_indlevel(data, out, cov, method = c("glm", "ols"), ...)
 }
 \arguments{
-\item{method}{}
+\item{data}{Individual-level data.}
+
+\item{out}{Main outcome of interest, must be either integer, string, or factor}
+
+\item{cov}{Character vector of covariates. First entry must denote the main
+group variable of interest for which covoting coefficient is computed.
+The first entry must be either an integer, string, or factor.}
+
+\item{method}{\code{"ols"} or \code{"glm"}. Defaults to OLS, thus using \link[fixest]{feols}
+for estimation. If \code{"glm"}, it estimates a multinomial logistic regression
+via  \link[nnet]{multinom}.}
+
+\item{...}{arguments passed to  \link[fixest]{feols} or  \link[nnet]{multinom}.}
+}
+\value{
+A vector with the main covoting coefficient \code{"beta"}, as well as the
+average predicted covoting probabilities within and between groups,
+based on mean values on all covariates.
 }
 \description{
-Title
+Estimate covoting coefficients for categorical cleavage variables from multinomial model
+}
+\examples{
+# Load some data
+data(synthvote)
+
+# Covoting coefficient from multinomial choice model
+est_covote_indlevel(data = synthvote, out = "prtvt", cov = c("group", "income"), method = "ols")
 }

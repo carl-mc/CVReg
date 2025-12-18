@@ -11,6 +11,13 @@ dyad_graph(N, return_edgemat = FALSE)
 
 \item{return_edgemat}{Return edge matrix rather than an igraph object.}
 }
+\value{
+Either an edge matrix or an igraph object
+}
 \description{
 Atomistic Dyad Graph
+}
+\examples{
+g <- dyad_graph(10, return_edgemat = FALSE)
+plot(g)
 }

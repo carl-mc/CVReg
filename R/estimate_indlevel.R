@@ -1,20 +1,47 @@
 
 
-#' Title
+#' Estimate covoting coefficients for categorical cleavage variables from multinomial model
 #'
-#' @param data
-#' @param out
-#' @param cov
-#' @param method
+#' @param data Individual-level data.
+#' @param out Main outcome of interest, must be either integer, string, or factor
+#' @param cov Character vector of covariates. First entry must denote the main
+#'    group variable of interest for which covoting coefficient is computed.
+#'    The first entry must be either an integer, string, or factor.
+#' @param method \code{"ols"} or \code{"glm"}. Defaults to OLS, thus using \link[fixest]{feols}
+#'   for estimation. If \code{"glm"}, it estimates a multinomial logistic regression
+#'   via  \link[nnet]{multinom}.
+#' @param ... arguments passed to  \link[fixest]{feols} or  \link[nnet]{multinom}.
 #'
-#' @returns
+#' @returns A vector with the main covoting coefficient \code{"beta"}, as well as the
+#'   average predicted covoting probabilities within and between groups,
+#'   based on mean values on all covariates.
 #' @export
 #'
+#' @import fixest
+#' @import nnet
+#' @importFrom stats formula
+#' @importFrom stats na.omit
+#' @importFrom stats predict
 #' @examples
-est_covote_indlevel <- function(data, out, cov, method = c("glm", "ols")){
+#' # Load some data
+#' data(synthvote)
+#'
+#' # Covoting coefficient from multinomial choice model
+#' est_covote_indlevel(data = synthvote, out = "prtvt", cov = c("group", "income"), method = "ols")
+est_covote_indlevel <- function(data, out, cov, method = c("glm", "ols"), ...){
     # To DataFrame if data.table
     if("data.table" %in% class(data)){
         data <- data.frame(data)
+    }
+
+    # Check outcome
+    if(!is.factor(data[, out]) & !is.integer(data[, out]) & !is.character(data[, out])){
+        stop("out must be either integer, character, or factor. ")
+    }
+
+    # Check main cleavage
+    if(!is.factor(data[, cov[1]]) & !is.integer(data[, cov[1]]) & !is.character(data[, cov[1]])){
+        stop("The first entry in cov must be either integer, character, or factor. ")
     }
 
     ## Subset data
@@ -59,12 +86,10 @@ est_covote_indlevel <- function(data, out, cov, method = c("glm", "ols")){
 
     # Multinomial logit // NNET
     if(method == "glm"){
-        require(nnet)
-
         ## Estimate
         mlog <- nnet::multinom(formula(paste("factor(", out, ") ~ 0 + ",
                                              paste(c(paste0("factor(", cov[1], ")"), colnames(data.cov)), collapse = " + "))),
-                               data = data.m)
+                               data = data.m, ...)
 
         ## Voting probabilities
         pmat <- predict(mlog, newdata = pred.df, type = "probs")
@@ -74,11 +99,10 @@ est_covote_indlevel <- function(data, out, cov, method = c("glm", "ols")){
         rownames(pmat) <- grps
 
     } else if(method == "ols"){
-        require(fixest)
         ## Estimate
         m_ls <- fixest::feols(formula(paste("c(", paste(paste0("I(", out, "=='", out.val, "')"), collapse = ","), ") ~ 0 + ",
                                             paste(c(paste0("factor(", cov[1], ")"), colnames(data.cov)), collapse = " + "))),
-                              data = data.m)
+                              data = data.m, ...)
 
 
 

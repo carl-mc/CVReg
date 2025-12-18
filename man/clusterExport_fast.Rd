@@ -6,6 +6,13 @@
 \usage{
 clusterExport_fast(cl, varlist, envir = .GlobalEnv)
 }
+\arguments{
+\item{cl}{CPU cluster object}
+
+\item{varlist}{Character vector of objects to export}
+
+\item{envir}{Environment to export objects from}
+}
 \description{
-Fast Export function for parallel processing
+Internal helper function
 }

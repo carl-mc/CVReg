@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_cvreg.R
 \name{post_process_cvr}
 \alias{post_process_cvr}
-\title{Title}
+\title{Post-processing function for estimate_cvreg}
 \usage{
 post_process_cvr(
   df,
@@ -18,8 +18,30 @@ post_process_cvr(
 )
 }
 \arguments{
-\item{ncore}{}
+\item{df}{The data used to fit model \code{m}}
+
+\item{m}{Model as returned by \code{fixest} estimator}
+
+\item{lean}{Logical flag to strip the model of all large objects.}
+
+\item{weights}{Weight variable name}
+
+\item{fe}{Names of fixed effects}
+
+\item{cluster}{Names of cluster variables used for standard error clustering}
+
+\item{cvr.det.var}{Name of main cleavage measure to estimate within and between group covoting
+and shared group membership among covoters and non-covoters for. Only works for binary measures (i.e., variable.eq)}
+
+\item{dcr}{Logical flag to compute dyadic clustered standard errors (Samii, 2015)}
+
+\item{weight.vec}{Vector of weights}
+
+\item{ncore}{Number of CPUs used for DCR standard error clustering.}
+}
+\value{
+A modified model object based on \code{m}.
 }
 \description{
-Title
+Helper function used to process the internal results of \code{estimate_cvreg()}.
 }

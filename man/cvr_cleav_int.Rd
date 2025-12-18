@@ -7,7 +7,15 @@
 cvr_cleav_int(df, main.var, int.vars)
 }
 \arguments{
-\item{int.vars}{}
+\item{df}{Pairwise dataset}
+
+\item{main.var}{Main variable of interest}
+
+\item{int.vars}{Control variables for which to build interactions.
+Can include either a CVR suffix or not. Must be in \code{df} for a and b.}
+}
+\value{
+An augmented dataset
 }
 \description{
 Make interactions between cleavages for fully interacted models

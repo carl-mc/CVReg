@@ -6,10 +6,13 @@
 #' @param N Number of vertices
 #' @param return_edgemat Return edge matrix rather than an igraph object.
 #'
-#' @returns
+#' @returns Either an edge matrix or an igraph object
 #' @export
+#' @import igraph
 #'
 #' @examples
+#' g <- dyad_graph(10, return_edgemat = FALSE)
+#' plot(g)
 dyad_graph <- function(N, return_edgemat = FALSE){
     ## Check
     if(N %% 2 == 1){
@@ -39,10 +42,13 @@ dyad_graph <- function(N, return_edgemat = FALSE){
 #' @param degree Edge degree (number of edges per vertex)
 #' @param return_edgemat Return edge matrix rather than an igraph object.
 #'
-#' @returns
+#' @returns Either an edge matrix or an igraph object
 #' @export
+#' @import igraph
 #'
 #' @examples
+#' g <- circle_graph(10, degree = 2, return_edgemat = FALSE)
+#' plot(g)
 circle_graph <- function(N, degree = 2, return_edgemat = FALSE){
     ## Check
     stopifnot(degree <= N)
@@ -171,10 +177,13 @@ circle_graph <- function(N, degree = 2, return_edgemat = FALSE){
 #' @param degree Average edge degree (avg. number of edges per vertex)
 #' @param return_edgemat Return edge matrix rather than an igraph object.
 #'
-#' @returns
+#' @returns Either an edge matrix or an igraph object
 #' @export
+#' @import igraph
 #'
 #' @examples
+#' g <- random_graph(10, degree = 2, return_edgemat = FALSE)
+#' plot(g)
 random_graph <- function(N, degree = 4, return_edgemat = FALSE){
     ## Degree
     eN <- N * degree / 2
@@ -205,12 +214,17 @@ random_graph <- function(N, degree = 4, return_edgemat = FALSE){
 #'
 #' @param N Number of vertices
 #' @param Ndim Number of dimensions (random variables)
+#' @param return_edgemat Return edge matrix rather than an igraph object.
 #'
-#' @returns
+#' @returns Either an edge matrix or an igraph object
 #' @export
+#' @import igraph
+#' @importFrom stats runif
 #'
 #' @examples
-random_ndim_graph <- function(N, Ndim){
+#' g <- random_ndim_graph(10, Ndim = 2)
+#' plot(g)
+random_ndim_graph <- function(N, Ndim, return_edgemat = FALSE){
     ## Draw random variables
     data <- do.call(cbind, lapply(seq_len(Ndim), function(d){
         runif(N)
@@ -218,20 +232,30 @@ random_ndim_graph <- function(N, Ndim){
     colnames(data) <- paste0("rdim_", 1:Ndim)
 
     ## Make graph
-    make_ndim_graph(data)
+    g <- make_ndim_graph(data)
+
+    ## Return
+    if(return_edgemat){
+        return(igraph::as_data_frame(g, what = "edges"))
+    } else {
+        return(g)
+    }
 }
 
 #' Planar graph via Delauney tesselation of data
 #'
 #' @param data Data to use for Delauney tesselation.
+#' @param  return_edgemat Return edge matrix rather than an igraph object.
 #'
-#' @returns
+#' @returns Either an edge matrix or an igraph object
 #' @export
+#' @import igraph
+#' @importFrom geometry delaunayn
 #'
 #' @examples
-make_ndim_graph <- function(data){
-    require(geometry)
-    require(igraph)
+#' g <- make_ndim_graph(data.frame(x = runif(10), y = runif(10)))
+#' plot(g)
+make_ndim_graph <- function(data, return_edgemat = FALSE){
 
     ## Name rows
     rownames(data) <- as.character(1:nrow(data))
@@ -277,6 +301,11 @@ make_ndim_graph <- function(data){
             data[,c]
     }
 
+
     ## Return
-    return(graph)
+    if(return_edgemat){
+        return(igraph::as_data_frame(graph, what = "edges"))
+    } else {
+        return(graph)
+    }
 }

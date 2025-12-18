@@ -13,6 +13,13 @@ circle_graph(N, degree = 2, return_edgemat = FALSE)
 
 \item{return_edgemat}{Return edge matrix rather than an igraph object.}
 }
+\value{
+Either an edge matrix or an igraph object
+}
 \description{
 Circle with supra-local structure
+}
+\examples{
+g <- circle_graph(10, degree = 2, return_edgemat = FALSE)
+plot(g)
 }

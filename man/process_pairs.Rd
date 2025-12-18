@@ -2,28 +2,60 @@
 % Please edit documentation in R/data_processing.R
 \name{process_pairs}
 \alias{process_pairs}
-\title{Title}
+\title{Process pair data based on common comparison functions}
 \usage{
-process_pairs(df, vars)
+process_pairs(df, vars = c(), fun.ls = list(), fun_data_frame = FALSE)
 }
 \arguments{
-\item{vars}{}
+\item{df}{Pair dataset, with variables of observations a and b denoted by prefix "a." and "b." respectively.
+Best use a dataset as returned by \link[CVReg]{data_to_pairs}. Can be either a \code{data.table} or \code{data.frame}.}
+
+\item{vars}{Variables to create based on comparison functions indicated by the following suffixes:
+\itemize{
+\item{\code{".eq"}:} Binary equality indicator. E.g, \code{group.eq = as.numeric(a.group == b.group)}
+\item{\code{".uneq"}:}  Binary inequality indicator. E.g,  \code{group.uneq = as.numeric(a.group != b.group)}
+\item{\code{".diff"}:} Absolute difference. E.g,  \code{income.diff = abs(a.income - b.income)}
+\item{\code{".sim"}:}  Similarity as -1 x (absolute difference). E.g,  \code{income.sim = -1 * abs(a.income - b.income)}
+\item{\code{".max"}:} Pairwise maximum. E.g,  \code{income.max = max(a.income, b.income)}
+\item{\code{".min"}:} Pairwise minimum. E.g,  \code{income.min = min(a.income, b.income)}
+\item{\code{".mean"}:} Pairwise mean. E.g,  \code{income.mean = mean(a.income, b.income)}
+}}
+
+\item{fun.ls}{Named list of functions to process \code{df} with. The input and sole argument of each
+function must be the pair-wise dataset \code{df} and the function must return the augmented \code{df}
+(e.g., the \code{df} with new variables added).
+Note that per default, \code{df} is passed as a \code{data.table}. If
+the functions are based on the simpler (but slower) \code{data.frame} notation
+and include operations that are inadmissible in a \code{data.table} environment,
+set flag \code{fun_data_frame = TRUE}.
+Can be used to generate custom-made variables. E.g., do create the Cartesian distance between a and b
+on the basis of variables x and y use:
+\code{fun.ls = list(function(df){df[, dist :=((a.x - b.x)^2 + (a.y - b.y)^2)^.5]})}}
+
+\item{fun_data_frame}{Logical flag on whether fun.ls is based on
+\code{data.frame} (TRUE) or \code{data.table} (FALSE, the default) notation.}
+}
+\value{
+A \code{data.table} object
 }
 \description{
-Title
+Process pair data based on common comparison functions
 }
 \examples{
-Load some data
+# Load some data
 data(synthvote)
 
 # Transform to pairs
-pair.df <- data_to_pairs(df = synthvote, by.var = c("unit"), structure = "full")
+pair.dt <- data_to_pairs(df = synthvote, by.var = c("unit"), structure = "full")
 
 # Process pair level data to create pairwise similarity/difference measures
 pair.vars <- c("prtvt.eq", "group.eq", "income.sim")
-pair.df <- process_pairs(df = pair.df,
-                         vars = pair.vars)
+pair.dt <- process_pairs(df = pair.dt,
+                         vars = pair.vars,
+                         fun.ls = list(function(df){
+                            df[, dist :=((a.x - b.x)^2 + (a.y - b.y)^2)^.5]
+                         }))
 
 # Inspect
-summary(pair.df[,..pair.vars])
+subset(pair.dt,,c(pair.vars, "dist"))
 }

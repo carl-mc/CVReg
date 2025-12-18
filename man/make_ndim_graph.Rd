@@ -4,11 +4,20 @@
 \alias{make_ndim_graph}
 \title{Planar graph via Delauney tesselation of data}
 \usage{
-make_ndim_graph(data)
+make_ndim_graph(data, return_edgemat = FALSE)
 }
 \arguments{
 \item{data}{Data to use for Delauney tesselation.}
+
+\item{return_edgemat}{Return edge matrix rather than an igraph object.}
+}
+\value{
+Either an edge matrix or an igraph object
 }
 \description{
 Planar graph via Delauney tesselation of data
+}
+\examples{
+g <- make_ndim_graph(data.frame(x = runif(10), y = runif(10)))
+plot(g)
 }
