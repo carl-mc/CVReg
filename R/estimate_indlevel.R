@@ -28,7 +28,7 @@
 #'
 #' # Covoting coefficient from multinomial choice model
 #' est_covote_indlevel(data = synthvote, out = "prtvt", cov = c("group", "income"), method = "ols")
-est_covote_indlevel <- function(data, out, cov, method = c("glm", "ols"), ...){
+est_covote_indlevel <- function(data, out, cov, method = "ols", ...){
     # To DataFrame if data.table
     if("data.table" %in% class(data)){
         data <- data.frame(data)

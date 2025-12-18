@@ -29,8 +29,9 @@ You can directly download and install the CVReg package from GitHub. Upon instal
 
 ```{r, eval = F}
 library(devtools)
-install_github(repo = "carl-mc/CVReg")
-library(cjRank)
+# install_github(repo = "carl-mc/CVReg")
+devtools::load_all(".")
+
 ```
 
 
@@ -40,36 +41,67 @@ Users of the CVR model get started by transforming their data (e.g., a survey)
 into pairwise observations. 
 
 ```{r, eval = T, warning=FALSE, message=F}
-# Packages
+library(CVReg)
+# Load some synthetic data
+data("synthvote")
 
-library(ggplot2)
+# Generate pairs
+pair.dt <- data_to_pairs(df = synthvote, structure = "full")
 
-# Load data
-data("ukraine")
+# Inspect
+head(pair.dt)
+```
 
-# Define objects with varible names
+Based on the pairs of observations a and b, we can now create a series of variables 
+that record similarities and shared characteristics in each pair. 
+```{r, eval = T, warning=FALSE, message=F}
+# Process pair level data to create pairwise similarity/difference measures
+pair.dt <- process_pairs(df = pair.dt,
+                         vars =  c("prtvt.eq", "group.eq", "income.sim"))
 
-## Categorical attribute variables
-attr.vars <- paste0("attr", 1:5, "_level")
-
-## Binary outcome variable
-outcome <- "choice"
-
-## Unique respondent ID
-respid <- "id"
-
-## Unique task x respondent ID
-taskid <- "resp_pair"
-
+# Inspect
+summary(subset(pair.dt,,c("prtvt.eq", "group.eq", "income.sim")))
 ```
 
 
-## Setting up a cjRank object
+## Fitting a CVR
 
-## Within-rank marginal means
-Lastly, we can estimate within-rank marginal means for every rank. These answer the question of the effect of a feature -- say $f_2$ -- on choices for tasks in which higher ranked feature (i.e., $f_1$) do not appear or are invariant. 
-```{r, eval = T}
+Using the pair level data on covoting, shared group membership and 
+income similarity, we can now run a simple linear regression model.
+```{r, eval = T, warning=FALSE, message=F}
+library(fixest)
+lm <- feols(prtvt.eq ~ group.eq + income.sim, data = pair.dt,
+            cluster = c("a.ID", "a.ID"))
+summary(lm)
+```
 
+Or we can use `the estimate_cvreg()` function, which implements 
+some additional methods, such as computing conditional within- and between-group
+covoting probabilities, or clustered standard errors for 
+dyadic data. 
+
+```{r, eval = T, warning=FALSE, message=F}
+cvr <- estimate_cvreg(prtvt.eq ~ group.eq + income.sim, data = pair.dt,
+                      cvr.det.var = "group.eq", cluster = c("a.ID", "a.ID"))
+all(cvr$coefficient == lm$coefficient)
+summary(cvr)
+unlist(cvr$sum.ls[c(1,2)])
+do.call(cbind, cvr$sum.ls[-c(1,2)])
+```
+
+## Contrast with conditional covoting probabilities from multinomial model
+
+```{r, eval = T, warning=FALSE, message=F}
+est_covote_indlevel(out = "prtvt", cov = c("group", "income"), data = synthvote, method = "ols")
+```
+
+
+## Add cross-cleavage interaction terms for improved inference
+```{r, eval = T, warning=FALSE, message=F}
+m.int <- estimate_cvreg(prtvt.eq ~ group.eq + income.sim, data = pair.dt, 
+                      cluster = c("a.ID", "a.ID"), main.int.var = "group.eq",
+                      int.vars = c("income.sim"))
+summary(m.int)
 ```
 
 

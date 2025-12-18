@@ -22,7 +22,7 @@
 #' Increase to avoid multi-collinearity issues when including many interaction terms.
 #' @param int_lasso Logical flag on whether to reduce set of interaction variables through a
 #' one-step LASSO which selects at most max.int.vars interaction variables with the highest predictive
-#' power over the main outcome of interest.
+#' power over the main outcome of interest. Defaults to FALSE.
 #' @param max.int.vars Maximum number of interaction terms selected through the LASSO procedure.
 #' @param lean Return a "lean" fixest model with all chunky objects dropped.
 #' @param model Defaults to "ols", but can be "glm" to estimate a logistic CVReg model.
@@ -66,10 +66,10 @@
 #' unlist(m$sum.ls[c(1,2)])
 #' do.call(cbind, m$sum.ls[-c(1,2)])
 estimate_cvreg <- function(fml,
-                         data, fixef, cluster, weights = NULL,
+                         data, fixef = NULL, cluster = NULL, weights = NULL,
                          cvr.det.var = NULL,
                          main.int.var = NULL, int.vars = c(),
-                         collin.tol = 1e-10, int_lasso = TRUE,
+                         collin.tol = 1e-10, int_lasso = FALSE,
                          max.int.vars = 100,
                          lean = TRUE,
                          model = "ols", dcr = FALSE, ncore = 1, ...){
@@ -88,7 +88,7 @@ estimate_cvreg <- function(fml,
     }
 
     ## Fixed effects vars
-    if(length(fixef) > 0){
+    if(!is.null(fixef)){
         if(all(paste0(c("a", "b"),".", rep(fixef, each = 2)) %in% colnames(data))){
             fixef <- paste0(c("a", "b"),".", rep(fixef, each = 2))
         }
@@ -112,7 +112,7 @@ estimate_cvreg <- function(fml,
         data <- cvr_cleav_int(df = data,
                              main.var = main.int.var,
                              int.vars = int.vars )
-        add.int.vars <- colnames(data)[grepl("int__", colnames(data))]
+        add.int.vars <- colnames(data)[grepl("ab__", colnames(data)) | grepl("axb__", colnames(data))]
 
         ## Lasso Selection
         if(int_lasso){
@@ -428,7 +428,7 @@ cvr_cleav_int <- function(df,
 
     # Single
     single.df <- std.ls[[1]] + std.ls[[2]]
-    colnames(single.df) <- paste0("int__cov", 1:ncol(single.df))
+    colnames(single.df) <- paste0("ab__", colnames(single.df))
 
     # Covariate Interactions
     varseq <- 1:ncol(std.ls[[1]])
@@ -438,7 +438,7 @@ cvr_cleav_int <- function(df,
         col.j <- cols[varseq >= i]
         d <- std.ls[[2]][,lapply(.SD, function(x){x * std.ls[[1]][[col.i]]}), .SDcols = col.j] +
             std.ls[[1]][,lapply(.SD, function(x){x * std.ls[[2]][[col.i]]}), .SDcols = col.j]
-        colnames(d) <- paste0("int__c", i, "_c", varseq[varseq >= i])
+        colnames(d) <- paste0("axb__", cols[i], "_", cols[varseq[varseq >= i]])
         d
     }))
 
@@ -470,7 +470,7 @@ cvr_cleav_int <- function(df,
 
     # Main treatment: Single // Is included in Self-interactions
     main.single.df <- main.ls.std[[1]] + main.ls.std[[2]]
-    colnames(main.single.df) <- paste0("int__", "main", 1:ncol(main.single.df))
+    colnames(main.single.df) <- paste0("ab__", colnames(main.single.df))
 
     # Main treatment: Self-Interactions
 
@@ -480,15 +480,29 @@ cvr_cleav_int <- function(df,
     cell.mat <- cbind(as.numeric(unlist(df[, ..a.main])),
                       as.numeric(unlist(df[, ..b.main])))
     cell.mat[cell.mat[,1] > cell.mat[,2], c(1,2)] <- cell.mat[cell.mat[,1] > cell.mat[,2], c(2,1)]
-    main.cells <- paste0("int__", main.var, cell.mat[,1], ".", cell.mat[,2])
-    uni.vals <- sort(unique(as.vector(cell.mat)))
-    main.vals <- sort(unique(main.cells))
-    same.grp <- paste0("int__", main.var, uni.vals, ".", uni.vals)
+    cell.mat <- data.table(cell.mat)
+
+    # Make temporary variable
+    covint.df[, TEMP := paste0("axb__", main.var, "_", cell.mat[[1]], ".", cell.mat[[2]])]
+
+    # Main treatment levels
+    main.levels <- levels(df[[a.main]])
+
+    # main.cells <- paste0("axb__", main.var, "_", cell.mat[,1], ".", cell.mat[,2])
+    # main.vals <- sort(unique(main.cells))
+    uni.cell <- as.matrix(unique(cell.mat))
+    uni.vals <- sort(unique(unlist(uni.cell)))
+    main.vals <- paste0("axb__", main.var, "_", uni.cell[,1], ".", uni.cell[,2])
+    names(main.vals) <-  paste0("axb__", main.var,
+                                main.levels[uni.cell[,1]], "_",main.var,
+                                main.levels[uni.cell[,2]])
+    same.grp <- paste0("axb__", main.var, "_", uni.vals, ".", uni.vals)
+
 
     ## Execute
     for(j in seq_along(main.vals)[-1]){
         main.vals.j <- main.vals[j]
-        covint.df[,(main.vals.j) := as.numeric(main.cells == main.vals[j])]
+        covint.df[,(main.vals.j) := as.numeric(TEMP == main.vals[j])]
         if(main.vals[j] %in% same.grp){
             mean <- mean(covint.df[[main.vals.j]][main.treat.ids])
             covint.df[,(main.vals.j) := main.treat.ids * (covint.df[[main.vals.j]] - mean)]
@@ -496,6 +510,9 @@ cvr_cleav_int <- function(df,
             mean <- mean(covint.df[[main.vals.j]][!main.treat.ids])
             covint.df[,(main.vals.j) := (!main.treat.ids) * (covint.df[[main.vals.j]] - mean)]
         }
+
+        # Rename
+        setnames(covint.df, main.vals.j, names(main.vals)[j])
     }
 
     # Interactions Main with Covariates
@@ -505,7 +522,7 @@ cvr_cleav_int <- function(df,
         col.i <- colnames(main.ls[[1]])[i]
         d <- std.ls[[2]][,lapply(.SD, function(x){x * main.ls[[1]][[col.i]]})] +
             std.ls[[1]][,lapply(.SD, function(x){x * main.ls[[2]][[col.i]]})]
-        colnames(d) <- paste0("int__m", i, "_c", c.varseq)
+        colnames(d) <- paste0("axb__", main.var, "", main.levels[i], "_", colnames(std.ls[[1]]))
         d
     })))
 
