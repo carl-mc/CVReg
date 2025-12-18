@@ -1,0 +1,77 @@
+---
+title: "CVReg: A Covoting Regression Model and Associated Methods"
+author: "Carl Muller-Crepon"
+output:
+   md_document:
+      variant: gfm
+
+---
+
+
+# cjRank: Conjoint Attribute Feature Ranking Methods
+
+## Introduction
+
+This package helps researchers to prepare data and estimate the covoting regression model (CVR) developed by Müller-Crepon and Bormann (APSR, forthcoming) and briefly outlined below.  
+When using the method and/or package, please cite: 
+
+Müller-Crepon, C., & Bormann, N.-C. (2025). Coethnics Covote in Africa: Studying Electoral Cleavages with a Covoting Regression Model. _American Political Science Review_, forthcoming. 
+
+You can find the publication for all technical details [here]() and as ungated version [here](http://www.carlmueller-crepon.org/publication/ethnic_parties/).
+
+## The method
+
+
+
+## Installation
+
+You can directly download and install the CVReg package from GitHub. Upon installation, the package should automatically install all necessary R dependencies. 
+
+```{r, eval = F}
+library(devtools)
+install_github(repo = "carl-mc/CVReg")
+library(cjRank)
+```
+
+
+## Preparing your data
+
+Users of the CVR model get started by transforming their data (e.g., a survey) 
+into pairwise observations. 
+
+```{r, eval = T, warning=FALSE, message=F}
+# Packages
+
+library(ggplot2)
+
+# Load data
+data("ukraine")
+
+# Define objects with varible names
+
+## Categorical attribute variables
+attr.vars <- paste0("attr", 1:5, "_level")
+
+## Binary outcome variable
+outcome <- "choice"
+
+## Unique respondent ID
+respid <- "id"
+
+## Unique task x respondent ID
+taskid <- "resp_pair"
+
+```
+
+
+## Setting up a cjRank object
+
+## Within-rank marginal means
+Lastly, we can estimate within-rank marginal means for every rank. These answer the question of the effect of a feature -- say $f_2$ -- on choices for tasks in which higher ranked feature (i.e., $f_1$) do not appear or are invariant. 
+```{r, eval = T}
+
+```
+
+
+## Feedback, comments, questions
+We are very grateful for any bug reports, feedback, questions, or contributions to this package. Please report any issues here or write to c.a.muller-crepon [at] lse.ac.uk .
