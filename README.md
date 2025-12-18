@@ -1,4 +1,4 @@
-# cjRank: Conjoint Attribute Feature Ranking Methods
+# CVReg: A Covoting Regression Model and Associated Methods
 
 ## Introduction
 
