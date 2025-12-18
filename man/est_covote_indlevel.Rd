@@ -4,7 +4,7 @@
 \alias{est_covote_indlevel}
 \title{Estimate covoting coefficients for categorical cleavage variables from multinomial model}
 \usage{
-est_covote_indlevel(data, out, cov, method = c("glm", "ols"), ...)
+est_covote_indlevel(data, out, cov, method = "ols", ...)
 }
 \arguments{
 \item{data}{Individual-level data.}

@@ -169,11 +169,6 @@ est_covote_indlevel(out = "prtvt", cov = c("group", "income"), data = synthvote,
 m.int <- estimate_cvreg(prtvt.eq ~ group.eq + income.sim, data = pair.dt, 
                       cluster = c("a.ID", "a.ID"), main.int.var = "group.eq",
                       int.vars = c("income.sim"))
-```
-
-    ## [1] "LASSO Interaction Selection"
-
-``` r
 summary(m.int)
 ```
 
@@ -181,14 +176,15 @@ summary(m.int)
     ## Observations: 124,750
     ## Weights: weight.vec
     ## Standard-errors: Clustered (a.ID) 
-    ##                Estimate Std. Error   t value   Pr(>|t|)    
-    ## (Intercept)    0.264375   0.008472 31.203931  < 2.2e-16 ***
-    ## group.eq       0.140631   0.014721  9.552916  < 2.2e-16 ***
-    ## income.sim    -0.003280   0.015774 -0.207957 8.3535e-01    
-    ## int__c1_c1     0.149837   0.025981  5.767088 1.4172e-08 ***
-    ## int__group2.2 -0.025566   0.015574 -1.641586 1.0131e-01    
-    ## int__m1_c1    -0.096686   0.016314 -5.926747 5.7752e-09 ***
-    ## int__m2_c1     0.066747   0.013221  5.048661 6.2509e-07 ***
+    ##                     Estimate Std. Error   t value   Pr(>|t|)    
+    ## (Intercept)         0.264375   0.008472 31.203931  < 2.2e-16 ***
+    ## group.eq            0.140631   0.014721  9.552916  < 2.2e-16 ***
+    ## income.sim         -0.003280   0.015774 -0.207957 8.3535e-01    
+    ## ab__income          0.066747   0.013221  5.048661 6.2509e-07 ***
+    ## ab__groupA          0.012783   0.007787  1.641586 1.0131e-01    
+    ## axb__income_income  0.149837   0.025981  5.767088 1.4172e-08 ***
+    ## axb__groupA_income -0.163434   0.025135 -6.502320 1.9259e-10 ***
+    ## ... 4 variables were removed because of collinearity (ab__groupB, axb__groupA_groupB and 2 others [full set in $collin.var])
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## RMSE: 0.465822   Adj. R2: 0.033017

@@ -7,14 +7,14 @@
 estimate_cvreg(
   fml,
   data,
-  fixef,
-  cluster,
+  fixef = NULL,
+  cluster = NULL,
   weights = NULL,
   cvr.det.var = NULL,
   main.int.var = NULL,
   int.vars = c(),
   collin.tol = 1e-10,
-  int_lasso = TRUE,
+  int_lasso = FALSE,
   max.int.vars = 100,
   lean = TRUE,
   model = "ols",
@@ -49,7 +49,7 @@ Increase to avoid multi-collinearity issues when including many interaction term
 
 \item{int_lasso}{Logical flag on whether to reduce set of interaction variables through a
 one-step LASSO which selects at most max.int.vars interaction variables with the highest predictive
-power over the main outcome of interest.}
+power over the main outcome of interest. Defaults to FALSE.}
 
 \item{max.int.vars}{Maximum number of interaction terms selected through the LASSO procedure.}
 
