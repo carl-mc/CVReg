@@ -12,10 +12,10 @@ output:
 
 ## Introduction
 
-This package helps researchers to prepare data and estimate the covoting regression model (CVR) developed by Müller-Crepon and Bormann (APSR, forthcoming) and briefly outlined below.  
+This package helps researchers to prepare data and estimate the covoting regression model (CVR) developed by Müller-Crepon and Bormann (APSR, conditionally accepted) and briefly outlined below.  
 When using the method and/or package, please cite: 
 
-Müller-Crepon, C., & Bormann, N.-C. (2025). Coethnics Covote in Africa: Studying Electoral Cleavages with a Covoting Regression Model. _American Political Science Review_, forthcoming. 
+Müller-Crepon, C., & Bormann, N.-C. (2025). Coethnics Covote in Africa: Studying Electoral Cleavages with a Covoting Regression Model. _American Political Science Review_, conditionally accepted for publication. 
 
 You can find the publication for all technical details [here]() and as ungated version [here](http://www.carlmueller-crepon.org/publication/ethnic_parties/).
 
