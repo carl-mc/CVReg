@@ -4,12 +4,12 @@
 
 This package helps researchers to prepare data and estimate the covoting
 regression model (CVR) developed by Müller-Crepon and Bormann (APSR,
-conditionally accepted) and briefly outlined below.  
+forthcoming) and briefly outlined below.  
 When using the method and/or package, please cite:
 
 Müller-Crepon, C., & Bormann, N.-C. (2025). Coethnics Covote in Africa:
 Studying Electoral Cleavages with a Covoting Regression Model. *American
-Political Science Review*, conditionally accepted for publication.
+Political Science Review*, forthcoming.
 
 You can find the publication for all technical details [here]() and as
 ungated version
@@ -25,8 +25,7 @@ necessary R dependencies.
 
 ``` r
 library(devtools)
-# install_github(repo = "carl-mc/CVReg")
-devtools::load_all(".")
+install_github(repo = "carl-mc/CVReg")
 ```
 
 ## Preparing your data
@@ -77,12 +76,12 @@ summary(subset(pair.dt,,c("prtvt.eq", "group.eq", "income.sim")))
 ```
 
     ##     prtvt.eq       group.eq        income.sim        
-    ##  Min.   :0.00   Min.   :0.0000   Min.   :-0.9986159  
-    ##  1st Qu.:0.00   1st Qu.:0.0000   1st Qu.:-0.5085070  
-    ##  Median :0.00   Median :1.0000   Median :-0.2982530  
-    ##  Mean   :0.34   Mean   :0.5298   Mean   :-0.3392353  
-    ##  3rd Qu.:1.00   3rd Qu.:1.0000   3rd Qu.:-0.1370884  
-    ##  Max.   :1.00   Max.   :1.0000   Max.   :-0.0000033
+    ##  Min.   :0.00   Min.   :0.0000   Min.   :-9.986e-01  
+    ##  1st Qu.:0.00   1st Qu.:0.0000   1st Qu.:-5.085e-01  
+    ##  Median :0.00   Median :1.0000   Median :-2.983e-01  
+    ##  Mean   :0.34   Mean   :0.5298   Mean   :-3.392e-01  
+    ##  3rd Qu.:1.00   3rd Qu.:1.0000   3rd Qu.:-1.371e-01  
+    ##  Max.   :1.00   Max.   :1.0000   Max.   :-3.270e-06
 
 ## Fitting a CVR
 
@@ -184,7 +183,8 @@ summary(m.int)
     ## ab__groupA          0.012783   0.007787  1.641586 1.0131e-01    
     ## axb__income_income  0.149837   0.025981  5.767088 1.4172e-08 ***
     ## axb__groupA_income -0.163434   0.025135 -6.502320 1.9259e-10 ***
-    ## ... 4 variables were removed because of collinearity (ab__groupB, axb__groupA_groupB and 2 others [full set in $collin.var])
+    ## ... 4 variables were removed because of collinearity (ab__groupB,
+    ## axb__groupA_groupB and 2 others [full set in $collin.var])
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## RMSE: 0.465822   Adj. R2: 0.033017
