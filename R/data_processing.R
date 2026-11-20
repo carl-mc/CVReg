@@ -159,6 +159,8 @@ data_to_pairs <- function(df,
         ## Subset if undirected
         if(structure != "all"){
           df <- df[a.ID < b.ID]
+        } else {
+          df <- df[a.ID != b.ID]
         }
       
         ## Remove temp
