@@ -131,7 +131,7 @@ data_to_pairs <- function(df,
     }
 
     # Structure
-    if(structure %in% c("full")){
+    if(structure %in% c("full", "all")){
         # Simple full, undirected graph via data.table
 
 
@@ -154,8 +154,13 @@ data_to_pairs <- function(df,
         ## Join
         df <- df[b.df,
                  on = by.var,
-                 allow.cartesian = TRUE][a.ID < b.ID]
-
+                 allow.cartesian = TRUE]
+      
+        ## Subset if undirected
+        if(structure != "all"){
+          df <- df[a.ID < b.ID]
+        }
+      
         ## Remove temp
         if("TEMP" %in% colnames(df)){
             df[, TEMP := NULL]
